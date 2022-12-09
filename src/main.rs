@@ -1,41 +1,42 @@
-use hyper::{Body, Request, Response, Server};
-use hyper::service::{make_service_fn, service_fn};
-use std::{convert::Infallible, net::SocketAddr};
-use futures::{future, Future};
+use actix_web::{middleware, get, web, App, HttpServer, Responder, HttpRequest, cookie::Key};
+use actix_session::{Session, SessionMiddleware, storage::CookieSessionStore};
+mod views;
 
-
-async fn microservice_handler(req: Request<Body> ) -> Result<Response<Body>, Infallible>  {
-    println!("request details: {:?}", req );
-    println!("UserAgent: {:?}", req.headers()["user-agent"] );
-    let response = {
-        match req.uri().path() {
-            "/" => {
-                Response::new("Hello, World!".into())
-            },
-            "/ua" => {
-                Response::new(format!("UserAgent: {:?}", req.headers()["user-agent"]).into() )
-            }
-            _ => Response::new("Hello, World! Not implemented".into())
-        }
-    };
-    Ok(response)
-}
-
-async fn handle(_: Request<Body>) -> Result<Response<Body>, Infallible> {
-    Ok(Response::new("Hello, World!".into()))
-}
-
-#[tokio::main]
-async fn main() {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
-
-    let make_svc = make_service_fn(|_conn| async {
-        Ok::<_, Infallible>(service_fn(move |req| microservice_handler(req)))
-    });
-
-    let server = Server::bind(&addr).serve(make_svc);
-    println!("server running on,: {}", addr);
-    if let Err(e) = server.await {
-        eprintln!("server error: {}", e);
+async fn index(req: HttpRequest, session: Session) -> &'static str {
+    println!("REQ: {req:?}");
+    if let Ok(Some(count)) = session.get::<i32>("counter") {
+        session.insert("counter", count + 1);
+    } else {
+        session.insert("counter", 1);
     }
+    "Hello world!";
+    println!("seesssion {:#?}", session.get::<i32>("counter").unwrap());
+    "REQ: {req:?}"
+    
+}
+
+#[actix_web::main]
+async fn main() ->  std::io::Result<()> {
+    
+
+    println!("Hello, world!");
+    // closure new to insert app
+    HttpServer::new(|| {
+        let app = App::new()
+        .wrap(middleware::Logger::default())
+        .wrap(
+            // create cookie based session middleware
+            SessionMiddleware::builder(CookieSessionStore::default(), Key::from(&[0; 64]))
+                .cookie_secure(false)
+                .build()
+        )
+        .service(web::resource("/index.html").to(|| async { "Hello world!" }))
+        .service(web::resource("/").to(index))
+        .configure(views::views_factory);
+    
+        return app
+    })
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }
