@@ -30,8 +30,6 @@ async fn main() ->  std::io::Result<()> {
                 .cookie_secure(false)
                 .build()
         )
-        .service(web::resource("/index.html").to(|| async { "Hello world!" }))
-        .service(web::resource("/").to(index))
         .configure(views::views_factory);
     
         return app
