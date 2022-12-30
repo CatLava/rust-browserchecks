@@ -8,12 +8,18 @@ use std::hash::{Hasher, Hash};
 use serde_derive::{Deserialize, Serialize};
 use md5::{Md5};
 use md5::Digest;
+use crate::data::models::{NewBfpData, BfpData};
+use crate::data::query::establish_connection;
+use crate::schema::bfp;
+use diesel::RunQueryDsl;
+use diesel::prelude::*;
+
 
 
 
 // This must match exactly the input from FE
 #[derive(Debug, Serialize, Deserialize, Hash )]
-pub struct BFP_fields {
+pub struct BFPFields {
     // For future references on structs, use the rename feature for these
     //#[serde(rename = "Cache-Control")]
     user_agent: String,
@@ -28,7 +34,7 @@ pub struct BFP_fields {
     plugins: String,
 }
 
-impl BFP_fields {
+impl BFPFields {
     fn calculate_hash(&self) -> String {
         // TODO, Implement interator for this
         // Iterator requires index to move on
@@ -48,26 +54,28 @@ impl BFP_fields {
             field_string.push_str(item)
         }
         let mut hasher = Md5::new();
-        hasher.update(field_string.as_bytes());
-        println!("datat a {:x}", md5::Md5::digest(field_string.as_bytes()));
-        format!("{:x}", md5::Md5::digest(field_string.as_bytes()) )
+        hasher.update(stringify!(fields).as_bytes());
+        println!("datat a {:x}", md5::Md5::digest(stringify!(fields).as_bytes()));
+        format!("{:x}", md5::Md5::digest(stringify!(fields).as_bytes()) )
     } 
 
 }
 
 #[derive(Debug, Serialize, Deserialize )]
-pub struct BFP_array
+pub struct BFPArray
     {
-        value: BFP_fields
+        value: BFPFields
       }
 
-pub async fn add_browser_info(req: HttpRequest, data: web::Json<BFP_array>)-> String {
+pub async fn add_browser_info(req: HttpRequest, data: web::Json<BFPArray>)-> String {
     // TODO need to handle this unwrap poroperly
    // println!("data {:?}", data.into_inner().value);
     println!("data {:?}", data.into_inner().value.calculate_hash());
     println!("req {:?}", req);
     let test_data = req.headers().get("user-agent").unwrap().to_str().unwrap();
     println!("http req: {:?}", test_data);
+    
+
 
     let added = add_string_to_store(test_data);
     println!("added {:?}", added);
@@ -83,6 +91,7 @@ struct BfpAddition {
 }
 
 fn add_string_to_store(data: &str) -> Result<usize, Error> {
+    use crate::schema::bfp;
     // need to read file and get index count
     // just need rudimentary until db portion is added 
     let bfp_add = BfpAddition {
@@ -97,7 +106,18 @@ fn add_string_to_store(data: &str) -> Result<usize, Error> {
         .unwrap();
     // ? returns a result if ok, or unpacks a result
     println!("bfp: {:?}", bfp_add);
-    // std::fs::write(
+    let mut connection = establish_connection();
+    let new_bfp = NewBfpData {
+        bfp_hash : &"hahs".to_string(),
+        user_agent : &"agent".to_string(),
+    };
+    println!("making it to db call!!!");
+    diesel::insert_into(bfp::table)
+        .values(&new_bfp)
+        .get_result::<BfpData>(&mut connection)
+        .expect("Error saving new post");
+       
+        
     //     fil,
     //     serde_json::to_string_pretty(&bfp_add).unwrap(),
     // )

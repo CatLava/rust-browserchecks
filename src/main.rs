@@ -1,6 +1,8 @@
 use actix_web::{middleware, get, web, App, HttpServer, Responder, HttpRequest, cookie::Key};
 use actix_session::{Session, SessionMiddleware, storage::CookieSessionStore};
 mod views;
+mod schema;
+mod data;
 
 async fn index(req: HttpRequest, session: Session) -> &'static str {
     println!("REQ: {req:?}");
