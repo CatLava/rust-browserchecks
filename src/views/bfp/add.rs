@@ -13,6 +13,7 @@ use crate::data::query::establish_connection;
 use crate::schema::bfp;
 use diesel::RunQueryDsl;
 use diesel::prelude::*;
+use super::utils::show_results;
 
 
 
@@ -70,34 +71,29 @@ pub struct BFPArray
 pub async fn add_browser_info(req: HttpRequest, data: web::Json<BFPArray>)-> String {
     // TODO need to handle this unwrap poroperly
    // println!("data {:?}", data.into_inner().value);
-    println!("data {:?}", data.into_inner().value.calculate_hash());
+    //println!("data {:?}", data.into_inner().value.calculate_hash());
     println!("req {:?}", req);
     let test_data = req.headers().get("user-agent").unwrap().to_str().unwrap();
     println!("http req: {:?}", test_data);
+    let data_to_add = NewBfpData {
+        bfp_hash: &data.into_inner().value.calculate_hash(),
+        user_agent :test_data,
+
+    };
     
 
 
-    let added = add_string_to_store(test_data);
+    let added = add_string_to_store(data_to_add);
     println!("added {:?}", added);
     format!("bfp data")
 
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
-struct BfpAddition {
-    index: i32,
-    data: String
-}
-
-fn add_string_to_store(data: &str) -> Result<usize, Error> {
+fn add_string_to_store(data: NewBfpData) -> () {
     use crate::schema::bfp;
     // need to read file and get index count
     // just need rudimentary until db portion is added 
-    let bfp_add = BfpAddition {
-        index: 4,
-        data: data.to_owned()
-    };
     let fil = "./bfp.json".to_string();
     let mut openfile = fs::OpenOptions::new()
         .write(true)
@@ -105,7 +101,6 @@ fn add_string_to_store(data: &str) -> Result<usize, Error> {
         .open(fil)
         .unwrap();
     // ? returns a result if ok, or unpacks a result
-    println!("bfp: {:?}", bfp_add);
     let mut connection = establish_connection();
     let new_bfp = NewBfpData {
         bfp_hash : &"hahs".to_string(),
@@ -113,15 +108,16 @@ fn add_string_to_store(data: &str) -> Result<usize, Error> {
     };
     println!("making it to db call!!!");
     diesel::insert_into(bfp::table)
-        .values(&new_bfp)
+        .values(&data)
         .get_result::<BfpData>(&mut connection)
         .expect("Error saving new post");
+    show_results();
        
         
     //     fil,
     //     serde_json::to_string_pretty(&bfp_add).unwrap(),
     // )
-    let data_to_add: String = serde_json::to_string_pretty(&bfp_add).unwrap() + ",";
-    openfile.write(data_to_add.as_bytes())
+    //let data_to_add: String = serde_json::to_string_pretty(&bfp_add).unwrap() + ",";
+    //openfile.write(data_to_add.as_bytes())
 
 }

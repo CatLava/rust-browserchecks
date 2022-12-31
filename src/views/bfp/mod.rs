@@ -1,6 +1,7 @@
 use actix_web::web;
 mod add;
 mod show;
+mod utils;
 use super::path::Path;
 
 pub fn bfp_factory(app: &mut web::ServiceConfig) {

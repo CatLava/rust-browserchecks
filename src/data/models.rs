@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime, Utc};
+use serde_derive::Serialize;
 use crate::schema::bfp;
 use diesel::prelude::*;
 
@@ -16,7 +17,7 @@ pub struct NewBfpData<'a> {
 //     }
 // }
 
-#[derive(Queryable, Identifiable)]
+#[derive(Queryable, Identifiable, Debug, Serialize)]
 #[diesel(table_name = bfp)]
 pub struct BfpData {
     pub id: i32,

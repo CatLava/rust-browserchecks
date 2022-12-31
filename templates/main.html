@@ -10,38 +10,12 @@
     <body>
         <h1>User-Agent Items</h1>
         <button id="bfp-button" value="Send">Send Info</button>
+        <button id="view-bfp" value="Send" onclick="seeItems()">See Info</button> -->
+        <!-- <button id="see-bfps" value="See BFPS">See BFPS</button> -->
+        <a href="http://127.0.0.1:8080/bfp/show">
+            Click Here to Redirect
+       </a>
     </body>
-    <!-- <script>
-        let createButton = document.getElementById("create-button");
-        createButton.addEventListener("click", postAlert);
-        function postAlert() {
-            let titleInput = document.getElementById("name");
-            alert(titleInput.value);
-            titleInput.value = null;
-        }
-    </script> -->
-    <!-- <script>
-        function apiCall(url, method) {
-        let xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        xhr.open("POST", "/bfp/add");
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-        value: "hellow" })
-        );
-    };
-       
-    function createItem() {
-        let title = document.getElementById("name");
-        let call = apiCall("/bfp/add/","POST");
-        call.send();
-        document.getElementById("name").value = null;
-        
-    };
-
-    document.getElementById("bfp-button").addEventListener(
-        "click", createItem);
-    </script> -->
 
     <script src="http://www.myersdaily.org/joseph/javascript/md5.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -204,39 +178,73 @@
             map      = get_map(fingerprint);
             map_hash = md5(map);
             bfp_data = get_browser_data();
-            document.write('<strong>Browser Data:</strong><br />');
-            document.write(get_browser_data() + '<br />');
-            document.write('<strong>FINGERPRINT:</strong><br />');
-            document.write(fingerprint.replace(/(.{40})/g, '$1<br />'));
-            document.write('<br /><strong>FINGERPRINT HASH:</strong><br />');
-            document.write(fingerprint_hash + '<br />');
-            //document.write('<br /><strong>MAP:</strong><br />');
-            //document.write(map.replace(/(.{40})/g, '$1<br />') + '<br />');
-            document.write('<br /><strong>MAP HASH:</strong><br />');
-            document.write(map_hash + '<br />');
+            // document.write('<strong>Browser Data:</strong><br />');
+            // document.write(get_browser_data() + '<br />');
+            // document.write('<strong>FINGERPRINT:</strong><br />');
+            // document.write(fingerprint.replace(/(.{40})/g, '$1<br />'));
+            // document.write('<br /><strong>FINGERPRINT HASH:</strong><br />');
+            // document.write(fingerprint_hash + '<br />');
+            // //document.write('<br /><strong>MAP:</strong><br />');
+            // //document.write(map.replace(/(.{40})/g, '$1<br />') + '<br />');
+            // document.write('<br /><strong>MAP HASH:</strong><br />');
+            // document.write(map_hash + '<br />');
             
             return fingerprint_hash + map_hash;
         }
         function apiCall(url, method) {
         let xhr = new XMLHttpRequest();
-        xhr.withCredentials = true;
-        xhr.open("POST", "/bfp/add");
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({
-        value: bfp_data })
-        );
+            xhr.withCredentials = true;
+            xhr.open(method, url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            if (method == "POST") {
+                xhr.send(JSON.stringify({
+                value: bfp_data })
+                );
+            }
+        };
+
+        function apiCall2(url, method) {
+        let xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+            xhr.open(method, url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            if (method == "POST") {
+                xhr.send(JSON.stringify({
+                value: bfp_data })
+                );
+            }
+            xhr.send()
+            xhr.onload = ()=>{
+            console.log(JSON.parse(xhr.response));
+            }
         };
         
         function createItem() {
             let title = document.getElementById("name");
-            let call = apiCall("/bfp/add/","POST");
+            let call = apiCall("/bfp/add","POST");
             call.send();
+            console.log(call);
             document.getElementById("name").value = null;
             
         };
 
+        function seeItems() {
+            let title = document.getElementById("name");
+            let call = apiCall("/bfp/show","GET");
+            call.send();
+            console.log(call);
+            document.getElementById("id").value = null;
+            
+            
+        };
+
+        console.log(apiCall2("/bfp/show","GET"))
+
         document.getElementById("bfp-button").addEventListener(
             "click", createItem);
+        // document.getElementById("view-bfp").addEventListener(
+        //     "click", seeItems).style.display = "block";
+
         
         document.write('<br /><strong>FINAL FINGERPRINT:</strong><br />' + final_fingerprint());
     </script>
